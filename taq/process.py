@@ -49,9 +49,7 @@ class ByteSpec:
 
 class TaqDataFrame:
 
-    # 
-
-    def __init__(self, fname, type, chunksize=10, process=True):
+    def __init__(self, fname, type, chunksize=100, process=True):
         '''
         Initializes an empty pandas dataframe for storing tick data.
         fname: file name (and directory) of original TAQ file
@@ -85,7 +83,6 @@ class TaqDataFrame:
                                                 localize(utc_base_time).\
                                                 timestamp()
 
-
                 if self.type == 'master':
                     self.dtype = ByteSpec().mtr_col_dt
                 elif self.type == 'quotes':
@@ -101,12 +98,12 @@ class TaqDataFrame:
                     if not bytes:
                         break
                     rows = len(bytes) // self.line_len
-                    # (10, 28)
-                    records = np.ndarray(shape=(rows,len(self.dtype)), dtype=self.dtype, buffer=bytes)
-                    print(records)
-
-
-
+                    records = np.ndarray(rows, dtype=self.dtype, buffer=bytes)
+                    if self.df.empty:
+                        self.df = pd.DataFrame(records)
+                    else:
+                        self.df = self.df.append(pd.DataFrame(records), ignore_index=True)
+                    
 
         return self
 
