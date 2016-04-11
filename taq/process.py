@@ -3,51 +3,13 @@ import pandas as pd
 import zipfile
 from pytz import timezone
 from datetime import datetime
+from bytespec import ByteSpec
 
-# A collection of tools to process financial time-series data
-
-class ByteSpec:
-    '''
-    A description of the records in TAQ file. Borrowed from @davclark
-    '''
-    bbo_col_dt = [  ('Hour',                       'S2'),
-                    ('Minute',                     'S2'),
-                    ('Second',                     'S2'),
-                    ('Milliseconds',               'S3'),
-                    ('Exchange',                   'S1'),
-                    ('Symbol_Root',                'S6'),
-                    ('Symbol_Suffix',             'S10'),
-                    ('Bid_Price',                 'S11'),
-                    ('Bid_Size',                   'S7'),
-                    ('Ask_Price',                 'S11'),
-                    ('Ask_Size',                   'S7'),
-                    ('Quote_Condition',            'S1'), 
-                    ('Market_Maker',               'S4'),
-                    ('Bid_Exchange',               'S1'),
-                    ('Ask_Exchange',               'S1'),
-                    ('Sequence_Number',           'S16'),
-                    ('National_BBO_Ind',           'S1'),
-                    ('NASDAQ_BBO_IND',             'S1'),
-                    ('Quote_Cancel_Correction',    'S1'),
-                    ('Source_of_Quote',            'S1'),
-                    ('Retail_Interest_Ind',        'S1'),
-                    ('Short_Sale_Restriction_Ind', 'S1'),
-                    ('LULD_BBO_Ind_CQS',           'S1'),
-                    ('LULD_BBO_Ind_UTP',           'S1'),
-                    ('FINRA_ADF_MPID_Ind',         'S1'),
-                    ('SIP_Generated_Message_ID',   'S1'),
-                    ('National_BBO_LULD_Ind',      'S1'),
-                    ('Line_Change',                'S2')  ]
-
-    trd_col_dt = []
-    qts_col_dt = []
-    mtr_col_dt = []
-
-
-
-    
+# A collection of tools to process financial time-series data   
 
 class TaqDataFrame:
+
+    # Attributes users should be able to access
 
     def __init__(self, fname, type, chunksize=100, process=True):
         '''
@@ -57,7 +19,7 @@ class TaqDataFrame:
         chunksize: number of lines to read in at once
         '''
         self.fname = fname
-        assert type in ['master', 'quotes', 'trades', 'bbo']
+        assert type in ['mtr', 'qts', 'trd', 'bbo']
         self.type = type
         self.chunksize = chunksize
         self.process = process
@@ -83,11 +45,11 @@ class TaqDataFrame:
                                                 localize(utc_base_time).\
                                                 timestamp()
 
-                if self.type == 'master':
+                if self.type == 'mtr':
                     self.dtype = ByteSpec().mtr_col_dt
-                elif self.type == 'quotes':
+                elif self.type == 'qts':
                     self.dtype = ByteSpec().qts_col_dt
-                elif self.type == 'trades':
+                elif self.type == 'trd':
                     self.dtype = ByteSpec().trd_col_dt
                 else:
                     self.dtype = ByteSpec().bbo_col_dt
@@ -99,12 +61,37 @@ class TaqDataFrame:
                         break
                     rows = len(bytes) // self.line_len
                     records = np.ndarray(rows, dtype=self.dtype, buffer=bytes)
-                    if self.df.empty:
-                        self.df = pd.DataFrame(records)
-                    else:
-                        self.df = self.df.append(pd.DataFrame(records), ignore_index=True)
+
+                    # With smaller chunksizes, the constant reassignment of self.df may be slow
+                    self.df = self.df.append(pd.DataFrame(records), ignore_index=True)
+ 
+        assert not self.df.empty
+        self.df = self.df.drop('Line_Change', axis=1)
+
+        if self.process:
+            # TODO: vectorized byte processing, make human-readable
+            # print (self.df)
+
+            # Clobber HHMMSSXXX into decimal unix time
+            # numer_df = self.df.drop(ByteSpec().bbo_strings, axis=1)
+
+            numer_df = self.df[ByteSpec().dict[self.type+'_numericals']]
+            strings_df = self.df[ByteSpec().dict[self.type+'_strings']]
+            
+            
+
+            # self.df['Timestamp'] = self.base_time + self.df['Hour']*3600      
+            # print ()
+
+            return None
                     
 
         return self
+
+    def query(self, stock, time, volume, price):
+        if self.df.empty:
+            raise ValueError('Must load in tick data into TaqDataFrame first')
+
+        return None
 
 # Goals: have TaqDataFrame object, pass into Featurizer,
