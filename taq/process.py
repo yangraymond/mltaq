@@ -76,25 +76,26 @@ class TaqDataFrame:
             numer_df = self.df[ByteSpec().dict[self.type+'_numericals']]
             strings_df = self.df[ByteSpec().dict[self.type+'_strings']]
 
-            # TODO: Clobber HHMMSSXXX into decimal unix time; first convert
-            # numerical columns to appropriate type, I think int64?
-            # Add in arguent errors='coerce' if ValueError comes up
+            # Add in argument errors='coerce' if ValueError comes up
             numer_df = numer_df.apply(pd.to_numeric)
             self.df[ByteSpec().dict[self.type+'_numericals']] = numer_df
 
             # Unwanted millisecond rounding
             self.df['Timestamp'] = self.base_time + self.df['Hour']*3600. +\
                                                     self.df['Minute']*60.+\
-                                                    self.df['Second']*1.+\
+                                                    self.df['Second']+\
                                                     self.df['Milliseconds']/1000.
 
-                                                    
+            cols = self.df.columns.tolist()
+            cols = cols[-1:] + cols[:-1]
+            self.df = self.df[cols]
 
+            # Bid/Ask price conversion
+            self.df[['Bid_Price','Ask_Price']] = self.df[['Bid_Price','Ask_Price']]/10000.
 
-
-            # TODO: Fill empty blocks with np.nan
-                 
-
+            # Drop unneeded columnns
+            self.df = self.df.drop(['Hour','Minute','Second','Milliseconds'], axis=1)
+            
         return self
 
     def query(self, stock, time, volume, price):
