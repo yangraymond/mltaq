@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import zipfile
 from pytz import timezone
+from codecs import decode
 from datetime import datetime
 from bytespec import ByteSpec
 
@@ -69,22 +70,30 @@ class TaqDataFrame:
         self.df = self.df.drop('Line_Change', axis=1)
 
         if self.process:
-            # TODO: vectorized byte processing, make human-readable
-            # print (self.df)
+            self.df = self.df.applymap(decode)
 
-            # Clobber HHMMSSXXX into decimal unix time
-            # numer_df = self.df.drop(ByteSpec().bbo_strings, axis=1)
-
+            # This produces a copy, won't modify self.df at all
             numer_df = self.df[ByteSpec().dict[self.type+'_numericals']]
             strings_df = self.df[ByteSpec().dict[self.type+'_strings']]
-            
-            
 
-            # self.df['Timestamp'] = self.base_time + self.df['Hour']*3600      
-            # print ()
+            # TODO: Clobber HHMMSSXXX into decimal unix time; first convert
+            # numerical columns to appropriate type, I think int64?
+            # Add in arguent errors='coerce' if ValueError comes up
+            numer_df = numer_df.apply(pd.to_numeric)
+            self.df[ByteSpec().dict[self.type+'_numericals']] = numer_df
 
-            return None
-                    
+            # Unwanted millisecond rounding
+            self.df['Timestamp'] = self.base_time + self.df['Hour']*3600. +\
+                                                    self.df['Minute']*60.+\
+                                                    self.df['Second']*1.+\
+                                                    self.df['Milliseconds']/1000.
+
+                                                    
+
+
+
+            # TODO: Fill empty blocks with np.nan
+                 
 
         return self
 
