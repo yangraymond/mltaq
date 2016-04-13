@@ -5,7 +5,7 @@ class ByteSpec:
     '''
     A description of the records in TAQ file. Borrowed from @davclark
     '''
-    bbo_col_dt = [  ('Hour',                       'S2'),
+    qts_col_dt = [  ('Hour',                       'S2'),
                     ('Minute',                     'S2'),
                     ('Second',                     'S2'),
                     ('Milliseconds',               'S3'),
@@ -35,10 +35,10 @@ class ByteSpec:
                     ('Line_Change',                'S2')  ]
 
     trd_col_dt = []
-    qts_col_dt = []
+    bbo_col_dt = []
     mtr_col_dt = []
 
-    bbo_strings = [ 'Exchange',
+    qts_strings = [ 'Exchange',
                     'Symbol_Root',
                     'Symbol_Suffix',
                     'Quote_Condition',
@@ -56,7 +56,7 @@ class ByteSpec:
                     'SIP_Generated_Message_ID',
                     'National_BBO_LULD_Ind' ]
 
-    bbo_numericals = [ 'Hour',
+    qts_numericals = [ 'Hour',
                        'Minute',
                        'Second',
                        'Milliseconds',
@@ -67,4 +67,4 @@ class ByteSpec:
                        'Sequence_Number',
                        'NASDAQ_BBO_IND' ]
 
-    dict = {'bbo_strings': bbo_strings, 'bbo_numericals': bbo_numericals}
+    dict = {'qts_strings': qts_strings, 'qts_numericals': qts_numericals}
