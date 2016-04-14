@@ -6,6 +6,7 @@ from codecs import decode
 from datetime import datetime
 from bytespec import ByteSpec
 from sklearn.feature_extraction import DictVectorizer
+
 # A collection of tools to process financial time-series data   
 
 class TaqDataFrame:
@@ -13,7 +14,7 @@ class TaqDataFrame:
     # Attributes users should be able to access
     loaded = False
 
-    def __init__(self, fname, type, chunksize=100, process=True):
+    def __init__(self, fname, type, chunksize=10000000, process=True):
         '''
         Initializes an empty pandas dataframe for storing tick data.
         fname: file name (and directory) of original TAQ file
@@ -58,6 +59,7 @@ class TaqDataFrame:
                     self.dtype = ByteSpec().bbo_col_dt
 
                 # Iterate through infile by chunksize
+
                 while True:
                     bytes = infile.read(self.chunksize*self.line_len)
                     if not bytes:
@@ -67,7 +69,7 @@ class TaqDataFrame:
 
                     # With smaller chunksizes, the constant reassignment of self.df may be slow
                     self.df = self.df.append(pd.DataFrame(records), ignore_index=True)
- 
+
         assert not self.df.empty
         self.df = self.df.drop('Line_Change', axis=1)
 
@@ -139,6 +141,8 @@ class TaqDataFrame:
     def featurize(self, stock):
         '''
         Extracts important features for a particular stock.
+        Should probably use forward/backward stepwise selection for
+        particular features.
         '''
         if self.df.empty:
             raise ValueError('Must load in tick data into TaqDataFrame first')
@@ -156,7 +160,8 @@ class TaqDataFrame:
             return
 
         # Select rows where Bid_Price>0 and Ask_Price>0 and Bid_Size>0 and Ask_Size>0
-        
+        training = training.ix[(training['Bid_Price']>0) | (training['Ask_Price']>0)]
+        training = training.ix[(training['Bid_Size']>0) | (training['Ask_Size']>0)]
 
         # Sort records by timestamp
         training = training.sort_values('Timestamp', axis=0, ascending=True)
@@ -165,11 +170,15 @@ class TaqDataFrame:
         training['Bid_Ask_Spread'] = training['Ask_Price'] - training['Bid_Price']
         training['Bid_Ask_Midpoint'] = (training['Ask_Price'] + training['Bid_Price'])/2.
         training['Bid_Ask_Size_Diff'] = training['Ask_Size'] - training['Bid_Size']
-        
+
+
         # Perhaps percentage of total volume traded for that day?
         
 
         # Add in time-dependent features: d(AskPrice)/dt, d(BidPrice)/dt
+
+        # Rescale row indices to [0, ...]
+        print (training)
 
         training_dict = training.to_dict('records')
         vec = DictVectorizer(sparse=False)
@@ -183,10 +192,26 @@ class TaqDataFrame:
         '''
         return None
 
-    def to_csv(self):
+    def to_csv(self, fname):
         '''
         Writes current self.df to output csv.
         '''
+        if fname[-4:] == '.csv':
+            fname = fname[:len(fname)-4]
+
         return None
 
-# Goals: have TaqDataFrame object, pass into Featurizer,
+    def to_pickle(self, fname):
+        self.df.to_pickle(fname)
+
+    def read_pickle(self, fname):
+        self.df = pd.read_pickle(fname)
+
+
+class CRSPDataFrame:
+
+    def __init__(self):
+        self.load()
+
+    def load(self):
+        return None

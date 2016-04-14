@@ -34,7 +34,22 @@ class ByteSpec:
                     ('National_BBO_LULD_Ind',      'S1'),
                     ('Line_Change',                'S2')  ]
 
-    trd_col_dt = []
+    trd_col_dt = [  ('Hour',                       'S2'),
+                    ('Minute',                     'S2'),
+                    ('Second',                     'S2'),
+                    ('Milliseconds',               'S3'),
+                    ('Exchange',                   'S1'),
+                    ('Symbol_Root',                'S6'),
+                    ('Symbol_Suffix',             'S10'),
+                    ('Sale_Condition',             'S4'),
+                    ('Trade_Volume',               'S9'),
+                    ('Trade_Price',               'S11'),
+                    ('Trade_Stop_Ind',             'S1'),
+                    ('Trade_Correction_Ind',       'S2'),
+                    ('Trade_Sequence_No',         'S16'),
+                    ('Source_of_Trade',            'S1'),
+                    ('Trade_Facility',             'S1'),
+                    ('Line_Change',                'S2')  ]
     bbo_col_dt = []
     mtr_col_dt = []
 
@@ -67,4 +82,22 @@ class ByteSpec:
                        'Sequence_Number',
                        'NASDAQ_BBO_IND' ]
 
-    dict = {'qts_strings': qts_strings, 'qts_numericals': qts_numericals}
+    trd_numericals = [ 'Hour',
+                       'Minute',
+                       'Second',
+                       'Milliseconds',
+                       'Trade_Volume',
+                       'Trade_Price' ]
+
+    trd_strings = [ 'Exchange',
+                    'Symbol',
+                    'Sale_Condition',
+                    'Trade_Stop_Ind',
+                    'Trade_Correction_Ind',
+                    'Trade_Sequence_No',
+                    'Source_of_Trade',
+                    'Trade_Facility',
+                    'Line_Change' ]
+
+    dict = {'qts_strings': qts_strings, 'qts_numericals': qts_numericals, 'trd_strings': trd_strings,
+            'trd_numericals': trd_numericals}
